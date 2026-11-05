@@ -550,7 +550,7 @@
     putStored(STORE, JSON.stringify(chats));
   }
   function active() { for (var i = 0; i < chats.length; i++) if (chats[i].id === activeId) return chats[i]; return null; }
-  function uid() { return (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/-/g, ""); }
+  function uid() { return (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") : Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(16)), function (b) { return ("0" + b.toString(16)).slice(-2); }).join("")); }
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);

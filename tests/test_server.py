@@ -48,6 +48,20 @@ class HelperTests(unittest.TestCase):
         self.assertEqual(server.parse_whatsapp(payload), [("m1", "49123", "Hallo"), ("m2", "49123", None)])
         self.assertEqual(server.parse_whatsapp({"entry": [{"changes": [{"value": {"statuses": []}}]}]}), [])
 
+    def test_whatsapp_replays_and_odd_shapes_are_ignored(self):
+        old = int(__import__("time").time()) - 3600
+        payload = {"entry": [{"changes": [{"value": {"messages": [
+            {"id": "old", "from": "1", "type": "text", "text": {"body": "x"}, "timestamp": str(old)},
+            "junk", {"id": "m", "from": "1", "type": "text", "text": "notadict"}]}}]}]}
+        self.assertEqual(server.parse_whatsapp(payload), [("m", "1", None)])
+
+    def test_rate_limiter_forgets_idle_addresses(self):
+        rl = server.RateLimiter(5)
+        for i in range(50_001):
+            rl.hits[f"k{i}"] = [0]
+        rl.allow("new", now=1000)
+        self.assertLess(len(rl.hits), 5)
+
     def test_split_message(self):
         text = ("word " * 2000).strip()
         parts = server.split_message(text, limit=500)
@@ -210,7 +224,7 @@ class HttpTests(unittest.TestCase):
         self.assertIsNotNone(self.app.sessions.find(f"web:{other['session_id']}", other["fid"]))
 
     def test_forget_gives_the_same_answer_for_unknown_chats_and_rejects_bad_input(self):
-        self.assertEqual(self.call("/api/forget", {"session_id": "never-existed-1234"})[0], 200)
+        self.assertEqual(self.call("/api/forget", {"session_id": "ab" * 16})[0], 200)
         self.assertEqual(self.call("/api/forget", {"session_id": "short"})[0], 400)
         self.assertEqual(self.call("/api/forget", {"session_id": "../../etc/passwd/xxxxx"})[0], 400)
         self.assertEqual(self.call("/api/forget", {})[0], 400)
@@ -218,7 +232,7 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(self.call("/api/forget", {"session_id": "x" * 2000})[0], 413)
 
     def test_forget_blocks_unknown_origin_and_is_rate_limited(self):
-        data = {"session_id": "never-existed-1234"}
+        data = {"session_id": "ab" * 16}
         self.assertEqual(self.call("/api/forget", data, {"Origin": "https://evil.example"})[0], 403)
         original = self.app.forget_limiter
         self.app.forget_limiter = server.RateLimiter(2)
@@ -227,6 +241,30 @@ class HttpTests(unittest.TestCase):
         finally:
             self.app.forget_limiter = original
         self.assertEqual(codes, [200, 200, 429])
+
+    def test_made_up_session_ids_are_not_adopted(self):
+        _, body, _ = self.call("/api/chat", {"message": "hi", "session_id": "12345678"})
+        sid = json.loads(body)["session_id"]
+        self.assertNotEqual(sid, "12345678")
+        self.assertRegex(sid, r"^[0-9a-f]{32}$")
+        self.assertEqual(self.call("/api/forget", {"session_id": "never-existed-1234"})[0], 400)
+
+    def test_deeply_nested_or_wrongly_typed_bodies_get_400_not_a_crash(self):
+        for body in (b"[" * 50000, b"[1]", b'"x"', b'{"message": {"a": 1}}', b'{"message": ["hi"]}', bytes([255, 254])):
+            for path in ("/api/chat", "/api/chat/stream", "/api/feedback", "/api/forget"):
+                self.assertIn(self.call(path, body)[0], (400, 413), (path, body[:20]))  # 413: over the endpoint's size cap
+
+    def test_wrong_methods_get_405_with_allow(self):
+        for path, method, allow in (("/api/chat", "GET", "POST"), ("/health", "POST", "GET"), ("/api/chat", "PUT", "POST"),
+                                    ("/api/chat", "DELETE", "POST"), ("/webhook/whatsapp", "PUT", "GET, POST")):
+            code, _, headers = self.call(path, b"{}" if method in ("POST", "PUT") else None, method=method)
+            self.assertEqual((code, headers.get("Allow")), (405, allow), (path, method))
+        self.assertEqual(self.call("/nope", method="PUT")[0], 404)
+        self.assertEqual(self.call("/nope", b"{}")[0], 404)
+        self.assertEqual(self.call("/admin", method="OPTIONS")[0], 404)
+
+    def test_no_python_version_in_the_server_header(self):
+        self.assertNotIn("Python", self.call("/health")[2].get("Server", ""))
 
     def test_config_includes_the_privacy_link(self):
         original = self.app.privacy_url

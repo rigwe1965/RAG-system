@@ -88,6 +88,8 @@ class RateLimiter:
     def allow(self, key, now=None):
         now = time.time() if now is None else now
         with self.lock:
+            if len(self.hits) > 50_000:  # bound memory: drop addresses with no recent hits
+                self.hits = {k: v for k, v in self.hits.items() if v and now - v[-1] < 60}
             recent = [t for t in self.hits.get(key, []) if now - t < 60]
             if len(recent) >= self.per_minute:
                 self.hits[key] = recent
@@ -203,6 +205,22 @@ class Sessions:
         return None
 
 
+SESSION_ID = re.compile(r"[0-9a-f]{32}")  # what the server issues (uuid4 hex); a guessable client-chosen id is refused
+
+
+def valid_sid(sid):
+    return isinstance(sid, str) and bool(SESSION_ID.fullmatch(sid))
+
+
+def parse_json_object(raw):
+    """The request body as a dict, or None if it is not JSON, is too deeply nested, or is not an object."""
+    try:
+        data = json.loads(raw)
+    except (ValueError, RecursionError):  # bad JSON, bad UTF-8, or "[[[[..." nested past Python's limit
+        return None
+    return data if isinstance(data, dict) else None
+
+
 INLINE_SCRIPT = re.compile(rb"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", re.S | re.I)
 
 
@@ -235,8 +253,16 @@ def parse_whatsapp(payload):
     for entry in payload.get("entry", []):
         for change in entry.get("changes", []):
             for m in change.get("value", {}).get("messages", []):
-                text = m.get("text", {}).get("body") if m.get("type") == "text" else None
-                out.append((m.get("id", ""), m.get("from", ""), text))
+                if not isinstance(m, dict):
+                    continue
+                try:  # Meta's timestamp is in seconds; a signed message older than 10 minutes is a replay, not a retry
+                    if time.time() - int(m.get("timestamp")) > 600:
+                        continue
+                except (TypeError, ValueError):
+                    pass
+                body = m.get("text")
+                text = body.get("body") if m.get("type") == "text" and isinstance(body, dict) else None
+                out.append((str(m.get("id", "")), str(m.get("from", "")), text if isinstance(text, str) else None))
     return out
 
 
@@ -358,6 +384,8 @@ class App:
 
     def handle_whatsapp(self, payload):
         for msg_id, sender, text in parse_whatsapp(payload):
+            if not msg_id:
+                continue  # without an id retries cannot be told apart, and "" would block every later message
             with self.wa_lock:
                 now = time.time()
                 self.seen_wa = {k: t for k, t in self.seen_wa.items() if now - t < 3600}
@@ -384,6 +412,7 @@ class App:
 def make_handler(app):
     class Handler(BaseHTTPRequestHandler):
         server_version = "FaiykeAssistant"
+        sys_version = ""  # do not announce the Python version
         timeout = 30  # seconds a client may stall while we read its request or write to it (slow-client protection)
 
         def log_message(self, fmt, *args):  # never log message content
@@ -430,7 +459,35 @@ def make_handler(app):
             return netaddr.client_ip(self.client_address[0], self.headers.get("X-Forwarded-For", ""))
 
         # --- routes
+        ROUTES = {"/health": "GET", "/api/config": "GET", "/": "GET", "/index.html": "GET", "/cookies": "GET",
+                  "/cookies.html": "GET", "/widget.js": "GET", "/api/chat": "POST", "/api/chat/stream": "POST",
+                  "/api/feedback": "POST", "/api/forget": "POST", "/webhook/whatsapp": "GET, POST"}
+
+        def wrong_method(self, path):
+            """405 with an Allow header when the path exists under another method. Returns True if it answered."""
+            allowed = self.ROUTES.get(path)
+            if not allowed:
+                return False
+            data = b'{"error": "method not allowed"}'
+            self.send_response(405)
+            for k, v in (("Allow", allowed), ("Content-Type", "application/json"), ("Content-Length", str(len(data))),
+                         ("X-Content-Type-Options", "nosniff")):
+                self.send_header(k, v)
+            self.end_headers()
+            self.wfile.write(data)
+            return True
+
+        def other_method(self):
+            path = urllib.parse.urlparse(self.path).path
+            if not self.wrong_method(path):
+                self.send(404, "not found", "text/plain", extra_cors=False)
+
+        do_PUT = do_DELETE = do_PATCH = do_HEAD = other_method
+
         def do_OPTIONS(self):
+            path = urllib.parse.urlparse(self.path).path
+            if path not in self.ROUTES:
+                return self.send(404, "not found", "text/plain", extra_cors=False)
             self.send_response(204)
             self.cors()
             self.end_headers()
@@ -513,13 +570,21 @@ def make_handler(app):
             if url.path == "/webhook/whatsapp":
                 q = urllib.parse.parse_qs(url.query)
                 token = os.environ.get("WHATSAPP_VERIFY_TOKEN")
-                if token and q.get("hub.mode") == ["subscribe"] and q.get("hub.verify_token") == [token]:
+                given = (q.get("hub.verify_token") or [""])[0]
+                if token and q.get("hub.mode") == ["subscribe"] and hmac.compare_digest(given.encode(), token.encode()):
                     return self.send(200, q.get("hub.challenge", [""])[0], "text/plain", extra_cors=False)
                 return self.send(403, "forbidden", "text/plain", extra_cors=False)
-            self.send(404, "not found", "text/plain", extra_cors=False)
+            if not self.wrong_method(url.path):
+                self.send(404, "not found", "text/plain", extra_cors=False)
+
+        POST_PATHS = ("/api/chat", "/api/chat/stream", "/api/feedback", "/api/forget", "/webhook/whatsapp")
 
         def do_POST(self):
             path = urllib.parse.urlparse(self.path).path
+            if path not in self.POST_PATHS and not path.startswith("/admin"):
+                if not self.wrong_method(path):
+                    self.send(404, "not found", "text/plain", extra_cors=False)
+                return
             raw = self.body()
             if path.startswith("/admin"):
                 return self.admin_post(path, raw)
@@ -554,11 +619,11 @@ def make_handler(app):
                 return self.send_json(413, {"error": "request too large"})
             if not app.forget_limiter.allow(f"forget:{self.client_ip()}"):
                 return self.send_json(429, {"error": "too many requests, please wait a moment"})
-            try:
-                sid = str(json.loads(raw).get("session_id") or "")
-            except (ValueError, AttributeError, RecursionError):
+            data = parse_json_object(raw)
+            if data is None:
                 return self.send_json(400, {"error": "bad request"})
-            if not (8 <= len(sid) <= 64 and sid.replace("-", "").isalnum()):
+            sid = data.get("session_id")
+            if not valid_sid(sid):
                 return self.send_json(400, {"error": "bad session id"})
             app.sessions.forget(f"web:{sid}")
             app.feedback.forget(sid)
@@ -578,21 +643,20 @@ def make_handler(app):
                 clean = feedback.validate(data)
             except (ValueError, RecursionError) as e:  # FeedbackError and bad JSON are both ValueError
                 return self.send_json(400, {"error": str(e) if isinstance(e, feedback.FeedbackError) else "bad request"})
-            sid = str(data.get("session_id") or "")
-            valid_sid = 8 <= len(sid) <= 64 and sid.replace("-", "").isalnum()
-            context = app.sessions.find(f"web:{sid}", clean["fid"]) if valid_sid else None
-            app.feedback.record(clean["rating"], clean["fid"], clean["comment"], sid if valid_sid else "", context)
+            sid = data.get("session_id")
+            ok_sid = valid_sid(sid)
+            context = app.sessions.find(f"web:{sid}", clean["fid"]) if ok_sid else None
+            app.feedback.record(clean["rating"], clean["fid"], clean["comment"], sid if ok_sid else "", context)
             self.send_json(200, {"ok": True})  # same answer whether or not it was stored: nothing to probe
 
         def chat_checks(self, raw):
             """The checks every chat request must pass. Returns (message, session_id), or None after sending the error."""
             if not self.origin_ok():
                 return self.send_json(403, {"error": "origin not allowed"})
-            try:
-                data = json.loads(raw)
-                message = str(data.get("message", "")).strip()
-            except (ValueError, AttributeError):
+            data = parse_json_object(raw)
+            if data is None or not isinstance(data.get("message", ""), str):
                 return self.send_json(400, {"error": "bad request"})
+            message = data.get("message", "").strip()
             if not message:
                 return self.send_json(400, {"error": "empty message"})
             if len(message) > MAX_MESSAGE_CHARS:
@@ -601,9 +665,9 @@ def make_handler(app):
                 return self.send_json(429, {"error": "too many messages, please wait a moment"})
             if not app.cap.allow(key=f"ip:{self.client_ip()}"):
                 return self.send_json(503, {"reply": FALLBACK})
-            sid = str(data.get("session_id") or "")
-            if not (8 <= len(sid) <= 64 and sid.replace("-", "").isalnum()):
-                sid = uuid.uuid4().hex
+            sid = data.get("session_id")
+            if not valid_sid(sid):
+                sid = uuid.uuid4().hex  # never adopt an id the client made up
             return message, sid
 
         def result_of(self, sid, answer, offered, suggestions=(), extra=None):
