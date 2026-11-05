@@ -642,7 +642,7 @@
   }
 
   /* ---------- small, safe markdown ---------- */
-  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
   function inline(s) {
     s = esc(s);
     s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
