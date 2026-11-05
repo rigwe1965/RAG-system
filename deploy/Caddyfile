@@ -1,3 +1,16 @@
+{
+	# Slow-client protection. Without these a client can open many connections and send a few bytes at a time,
+	# which ties up the chat server's threads. (No write timeout on purpose: answers are streamed and take a while.)
+	servers {
+		timeouts {
+			read_header 10s
+			read_body 20s
+			idle 2m
+		}
+		max_header_size 16KB
+	}
+}
+
 chat.faiyke.com {
     # The admin dashboard is for the owner only. Everyone else gets "not found", as if it did not exist.
     # EDIT THIS LINE: replace 127.0.0.1 with your own fixed IP address (several allowed, separated by spaces), then run
@@ -23,6 +36,11 @@ chat.faiyke.com {
         # Do not compress the streaming endpoint: compression buffers it, and the answer would arrive all at once.
         @compressible not path /api/chat/stream
         encode @compressible gzip
+
+        # No chat, rating or webhook message is larger than this; the server itself refuses bodies over 100 KB too.
+        request_body {
+            max_size 100KB
+        }
 
         reverse_proxy 127.0.0.1:8080 {
             flush_interval -1   # pass streamed answers on immediately instead of collecting them
