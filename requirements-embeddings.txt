@@ -1,0 +1,7 @@
+# OPTIONAL. Only needed for semantic search (see rag/embed.py). Without it the assistant uses keyword search.
+# Exact versions on purpose: update them deliberately, and run `python -m pip_audit` (pip install pip-audit) now and then.
+fastembed==0.9.1
+onnxruntime==1.31.1
+tokenizers==0.23.3
+huggingface-hub==1.33.0
+numpy==2.5.3

@@ -1,0 +1,17 @@
+.env
+logs/
+handoffs/
+index/
+__pycache__/
+*.pyc
+feedback/
+models/
+sessions/
+gaps/
+hub/index/
+metrics/
+hub/
+.pytest_cache/
+*.db
+*.db-shm
+*.db-wal

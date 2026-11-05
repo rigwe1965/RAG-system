@@ -1,0 +1,42 @@
+[Unit]
+Description=Faiyke chat assistant
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=faiyke
+Group=faiyke
+WorkingDirectory=/opt/faiyke
+Environment=HOST=127.0.0.1
+Environment=PORT=8080
+Environment=PYTHONUNBUFFERED=1
+# Caddy runs on this server and tells us the visitor's real address in X-Forwarded-For; believe it only from there.
+Environment=TRUSTED_PROXIES=127.0.0.1,::1
+ExecStart=/usr/bin/python3 -m rag.server
+Restart=always
+RestartSec=3
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Only these names may open /admin (see ALLOWED_HOSTS in .env.example); add your own domain here if it differs.
+Environment=ALLOWED_HOSTS=chat.faiyke.com,127.0.0.1,localhost
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+# The server only needs the network (to Anthropic, Meta and the mail server) and local sockets.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+UMask=0077
+ReadWritePaths=/opt/faiyke
+
+[Install]
+WantedBy=multi-user.target

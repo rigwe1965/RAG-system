@@ -1,0 +1,31 @@
+chat.faiyke.com {
+    # The admin dashboard is for the owner only. Everyone else gets "not found", as if it did not exist.
+    # EDIT THIS LINE: replace 127.0.0.1 with your own fixed IP address (several allowed, separated by spaces), then run
+    #   sudo systemctl reload caddy
+    # While it says 127.0.0.1 nobody on the internet can open /admin; reach it with an SSH tunnel instead:
+    #   ssh -L 8080:127.0.0.1:8080 user@server   then open http://127.0.0.1:8080/admin
+    @admin_blocked {
+        path /admin /admin/*
+        not remote_ip 127.0.0.1
+    }
+    handle @admin_blocked {
+        respond "not found" 404
+    }
+
+    # Browsers must always use https for this site from now on (one year), and never guess a file type.
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    handle {
+        # Do not compress the streaming endpoint: compression buffers it, and the answer would arrive all at once.
+        @compressible not path /api/chat/stream
+        encode @compressible gzip
+
+        reverse_proxy 127.0.0.1:8080 {
+            flush_interval -1   # pass streamed answers on immediately instead of collecting them
+        }
+    }
+}
