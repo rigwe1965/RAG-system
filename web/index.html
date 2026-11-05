@@ -9,17 +9,17 @@
     /* Palette from the shop's own catalogue: ink-violet is "natural black 1B", honey is "613 blonde". The five strand
        colours are the five service lines; they appear in the mark, the starter questions and the source labels. */
     :root {
-      --ink: #1b1624;
-      --ink-2: #4d4559;
+      --ink: #161513;
+      --ink-2: #4d4a45;
       --ink-3: #6c6479;
-      --bg: #f4f3f6;
-      --surface: #ffffff;
-      --surface-2: #faf9fb;
-      --line: #e4e0ea;
+      --bg: #f1efea;
+      --surface: #fbfaf8;
+      --surface-2: #e9e6e0;
+      --line: #dcd8d0;
       --bubble: #1b1624;
       --bubble-ink: #ffffff;
-      --accent: #e2b04a;
-      --accent-ink: #1b1624;
+      --accent: #ff6b1a;
+      --accent-ink: #ffffff;
       --link: #5a3b96;
       --focus: #5a3b96;
       --danger: #b3261e;
@@ -45,7 +45,7 @@
         --line: #2b2537;
         --bubble: #3a2f52;
         --bubble-ink: #f6f2fb;
-        --accent: #e9bd62;
+        --accent: #ff7a2e;
         --accent-ink: #1b1624;
         --link: #b9a0f2;
         --focus: #b9a0f2;
@@ -323,6 +323,29 @@
     .cookie .yes { background: var(--bubble); color: var(--bubble-ink); border-color: var(--bubble); }
     .cookie .no { background: var(--surface-2); color: var(--ink); font-weight: 500; }
     .cookie button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+    /* ---------- warm, app-style look: big greeting, rounded composer card, pill nav ---------- */
+    @media (prefers-color-scheme: light) { .side { background: #f7f5f1; } }
+    .new { background: var(--surface-2); border-color: transparent; border-radius: 10px; }
+    .item { border-radius: 8px; }
+    .item[aria-current="true"] { box-shadow: none; background: var(--surface-2); }
+    .empty { text-align: center; padding: clamp(32px, 14vh, 140px) 0 24px; }
+    .empty .hero-mark { margin-left: auto; margin-right: auto; }
+    .empty h2 { font: 700 clamp(34px, 5.6vw, 56px)/1.08 var(--sans); letter-spacing: -.025em; }
+    .empty h2::after { content: "."; color: var(--accent); }
+    .empty > p { margin-left: auto; margin-right: auto; }
+    .starts { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; text-align: left; }
+    .start { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 12px 14px 12px 10px; }
+    .start:hover { border-color: var(--ink-3); background: var(--surface); }
+    .box { border-radius: 14px; box-shadow: 0 1px 2px rgba(22,21,19,.05); background: var(--surface); padding: 10px 10px 10px 18px; }
+    .box:focus-within { border-color: var(--ink-3); }
+    .send { border-radius: 10px; background: var(--accent); }
+    .send:disabled { background: var(--line); color: var(--ink-3); }
+    .human, .lang, .speak { border-radius: 10px; }
+    .cookie { left: auto; right: 16px; border-radius: 12px; }
+    .cookie .yes { border-radius: 8px; }
+    .cookie .no { border-radius: 8px; background: var(--surface); }
+    .cta, .btn { border-radius: 10px; }
     .linkish { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
   </style>
 </head>
