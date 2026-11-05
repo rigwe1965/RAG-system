@@ -1,0 +1,23 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+
+# Least privilege: the workflow can read the code and nothing else. It uses no secrets, so a pull request from a
+# fork cannot read any. Never add ANTHROPIC_API_KEY or other secrets here: the tests use fakes, not the real API.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pytest pip-audit
+      - run: python -m pytest -q tests
+      - name: Known vulnerabilities in the pinned optional packages
+        run: pip-audit -r requirements-embeddings.txt

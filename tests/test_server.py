@@ -263,6 +263,22 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(self.call("/nope", b"{}")[0], 404)
         self.assertEqual(self.call("/admin", method="OPTIONS")[0], 404)
 
+    def test_the_whatsapp_verify_token_is_not_written_to_the_log(self):
+        import contextlib, io
+        before = os.environ.get("WHATSAPP_VERIFY_TOKEN")
+        os.environ["WHATSAPP_VERIFY_TOKEN"] = "s3cret-verify-token"
+        err = io.StringIO()
+        try:
+            with contextlib.redirect_stderr(err):
+                self.call("/webhook/whatsapp?hub.mode=subscribe&hub.verify_token=s3cret-verify-token&hub.challenge=1")
+        finally:
+            if before is None:
+                os.environ.pop("WHATSAPP_VERIFY_TOKEN", None)
+            else:
+                os.environ["WHATSAPP_VERIFY_TOKEN"] = before
+        self.assertNotIn("s3cret-verify-token", err.getvalue())
+        self.assertIn("hub.verify_token=***", err.getvalue())
+
     def test_no_python_version_in_the_server_header(self):
         self.assertNotIn("Python", self.call("/health")[2].get("Server", ""))
 

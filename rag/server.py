@@ -416,7 +416,8 @@ def make_handler(app):
         timeout = 30  # seconds a client may stall while we read its request or write to it (slow-client protection)
 
         def log_message(self, fmt, *args):  # never log message content
-            sys.stderr.write("%s %s\n" % (self.address_string(), fmt % args))
+            line = re.sub(r"(hub\.verify_token=)[^&\s]*", r"\1***", fmt % args)  # Meta's check puts the secret in the address
+            sys.stderr.write("%s %s\n" % (self.address_string(), line))
 
         # --- plumbing
         def cors(self):
@@ -734,6 +735,10 @@ def main():
         sys.exit("Set ANTHROPIC_API_KEY first.")
     host, port = os.environ.get("HOST", "127.0.0.1"), int(os.environ.get("PORT", "8080"))
     app = App()
+    if app.admin.enabled and host not in ("127.0.0.1", "localhost", "::1") and not (
+            os.environ.get("ALLOWED_HOSTS") or os.environ.get("ADMIN_ALLOWED_IPS")):
+        print("[warning] /admin is on and this server is reachable from other machines, but neither ALLOWED_HOSTS nor "
+              "ADMIN_ALLOWED_IPS is set. Set at least one (see .env.example).", file=sys.stderr)
     privacy.start_background()  # delete records past their retention period now, then once a day
     server = ThreadingHTTPServer((host, port), make_handler(app))
     wa = all(os.environ.get(k) for k in ("WHATSAPP_TOKEN", "WHATSAPP_PHONE_ID", "WHATSAPP_VERIFY_TOKEN", "WHATSAPP_APP_SECRET"))

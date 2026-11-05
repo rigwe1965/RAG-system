@@ -28,6 +28,13 @@ ProtectKernelModules=true
 ProtectKernelLogs=true
 ProtectControlGroups=true
 ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+ProcSubset=pid
+SystemCallArchitectures=native
+# One thread per connection: cap threads and open files so a flood cannot take the whole server down.
+TasksMax=512
+LimitNOFILE=4096
 RestrictSUIDSGID=true
 RestrictRealtime=true
 RestrictNamespaces=true

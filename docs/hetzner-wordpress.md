@@ -9,24 +9,36 @@ Use a **separate small server** for the chat (Hetzner Cloud, type CX22 or simila
 
 ## 2. Upload and install (10 min)
 
-From your PC (PowerShell), in the project folder:
+First make a normal login for yourself and shut the door on root (do this once, while still logged in as root; keep this
+window open and test the new login in a second window before you close it):
+
+```bash
+ssh root@SERVER_IP
+adduser deploy && usermod -aG sudo deploy
+mkdir -p /home/deploy/.ssh && cp ~/.ssh/authorized_keys /home/deploy/.ssh/ && chown -R deploy:deploy /home/deploy/.ssh
+sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/; s/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+systemctl reload ssh
+```
+
+From your PC (PowerShell), in the project folder. Leave out `.env` if it holds keys from your own computer, and
+create it on the server instead:
 
 ```powershell
-scp -r . root@SERVER_IP:/root/faiyke
-ssh root@SERVER_IP
+scp -r . deploy@SERVER_IP:/home/deploy/faiyke
+ssh deploy@SERVER_IP
 ```
 
 On the server:
 
 ```bash
-cd /root/faiyke
-bash deploy/setup.sh        # installs Python, Caddy (https), firewall, and the service
-nano /opt/faiyke/.env       # set ANTHROPIC_API_KEY and ALLOWED_ORIGINS=https://www.faiyke.com,https://faiyke.com
-systemctl restart faiyke-chat
+cd ~/faiyke
+sudo bash deploy/setup.sh        # installs Python, Caddy (https), firewall, and the service
+sudo nano /opt/faiyke/.env   # set ANTHROPIC_API_KEY and ALLOWED_ORIGINS=https://www.faiyke.com,https://faiyke.com
+sudo systemctl restart faiyke-chat
 curl https://chat.faiyke.com/health     # should print {"ok": true}
 ```
 
-`.env` stays on the server. Never email it. Add the WhatsApp and SMTP values here later too.
+`.env` stays on the server. Never email it. Delete the uploaded folder (`rm -rf ~/faiyke`) once setup is done. The program files in `/opt/faiyke` belong to root on purpose; only the data folders (`handoffs`, `logs`, `sessions`, ...) belong to the chat service. Add the WhatsApp and SMTP values here later too.
 
 ## 3. Add it to WordPress
 
@@ -49,9 +61,9 @@ Phone and PC: opening hours, a hair question, a German question, "I want to spea
 | Task | Command (on the server) |
 |---|---|
 | Status / logs | `systemctl status faiyke-chat` / `journalctl -u faiyke-chat -n 50` |
-| After editing the knowledge base | upload the files to `/opt/faiyke/knowledge-base/`, then `cd /opt/faiyke && sudo -u faiyke python3 -m rag.ingest && systemctl restart faiyke-chat` |
+| After editing the knowledge base | upload the files to `/opt/faiyke/knowledge-base/` (with `sudo`), then `cd /opt/faiyke && sudo -u faiyke python3 -m rag.ingest && sudo systemctl restart faiyke-chat` |
 | After editing `.env` | `systemctl restart faiyke-chat` |
-| Updates | `apt update && apt upgrade` monthly; turn on Hetzner backups (about 20% extra) |
+| Updates | security updates install by themselves (`unattended-upgrades`); still run `apt update && apt upgrade` monthly and reboot when asked; turn on Hetzner backups (about 20% extra) |
 
 Also sign Hetzner's data processing agreement (in the Hetzner console), and list the chat in your privacy policy.
 
