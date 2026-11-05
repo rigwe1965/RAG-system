@@ -40,6 +40,7 @@ SAFE_ADDRESS = re.compile(r"^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-
 CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 LIMITS = {"name": 100, "company": 100, "contact": 120, "order_number": 40, "reason": 200, "summary": 600}
 TRANSCRIPT_ITEM = 600
+FIELDS = set(LIMITS) | {"business_line", "priority", "consent"}
 _lock = threading.Lock()
 
 
@@ -60,7 +61,9 @@ def _clean(value, limit):
 
 def validate(data):
     """Return a cleaned copy of the model's input, or raise HandoffError saying what is missing."""
-    d = {k: (str(v).strip() if v is not None else "") for k, v in data.items()}
+    # Only the fields the tool declares are kept. The model's input is not trusted to add others: an extra "reference"
+    # or "time" would otherwise overwrite ours and slip past the daily caps and the retention clean-up.
+    d = {k: (str(v).strip() if v is not None else "") for k, v in data.items() if k in FIELDS}
     for key, limit in LIMITS.items():
         if key in d:
             d[key] = _clean(d[key], limit)
@@ -214,9 +217,9 @@ def create_handoff(data, transcript=None):
         if _count_today(path) >= int(os.environ.get("HANDOFF_DAILY_CAP", "200")):
             raise HandoffError("Too many hand-off requests today. Give the customer our email and phone number instead.")
         rec = {
-            "reference": _next_reference(path),
-            "time": datetime.now(timezone.utc).isoformat(),
             **d,
+            "reference": _next_reference(path),  # ours, set after the customer's fields so they can never replace it
+            "time": datetime.now(timezone.utc).isoformat(),
             "transcript": [{"role": m["role"], "content": _clean(m["content"], TRANSCRIPT_ITEM)}
                            for m in (transcript or []) if isinstance(m.get("content"), str)][-8:],
         }

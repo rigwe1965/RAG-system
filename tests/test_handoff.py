@@ -1,5 +1,6 @@
 """Hand-off tests. They need no API key and send no email."""
 import json
+from datetime import datetime, timezone
 import os
 import tempfile
 import unittest
@@ -258,6 +259,22 @@ class ToolLoopTests(unittest.TestCase):
         out = json.loads(assistant.Assistant.run_tool(
             None, "escalate_to_human", {**GOOD, "consent": True}, CONSENT_ASKED + [{"role": "user", "content": "Yes please"}]))
         self.assertTrue(out["ok"])
+
+
+class UnknownFieldsTests(unittest.TestCase):
+    def test_extra_fields_from_the_model_cannot_replace_reference_or_time(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["HANDOFF_DIR"] = tmp
+            try:
+                r = handoff.create_handoff({**GOOD, "reference": "FAI-20200101-001", "time": "2999-01-01T00:00:00+00:00",
+                                            "extra": "x" * 5000})
+                rec = json.loads((Path(tmp) / "handoffs.jsonl").read_text(encoding="utf-8").splitlines()[0])
+            finally:
+                os.environ.pop("HANDOFF_DIR", None)
+        self.assertEqual(r["reference"], rec["reference"])
+        self.assertTrue(rec["reference"].startswith("FAI-" + handoff._today()))
+        self.assertTrue(rec["time"].startswith(str(datetime.now(timezone.utc).year)))
+        self.assertNotIn("extra", rec)
 
 
 class ConsentInTranscriptTests(unittest.TestCase):
