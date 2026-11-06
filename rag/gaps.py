@@ -14,7 +14,7 @@ Privacy rules (each has a test): emails and phone numbers are removed from the q
 old rows are deleted automatically (RETENTION_GAPS_DAYS, default 60), and the number of rows per day and the
 file size are capped.
 """
-import hashlib
+
 import json
 import os
 import re
@@ -23,6 +23,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import pseudonym
 from .feedback import scrub
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -43,7 +44,7 @@ def strip_marker(answer):
 
 
 def key_hash(key):
-    return hashlib.sha256(("gap:" + key).encode("utf-8")).hexdigest()[:12]
+    return pseudonym.keyed("gap", key, 12)  # keyed: an unkeyed hash of a phone number can be guessed back (rag/pseudonym.py)
 
 
 def enabled():
@@ -92,5 +93,5 @@ class GapStore:
 
     def forget(self, key):
         """Delete every gap recorded from this chat. Returns the number removed."""
-        wanted = key_hash(key)
-        return self.rewrite(lambda row: row.get("session") != wanted)
+        wanted = {key_hash(key), pseudonym.legacy("gap", key, 12)}  # the old unkeyed form too: records from before the upgrade
+        return self.rewrite(lambda row: row.get("session") not in wanted)

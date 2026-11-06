@@ -26,12 +26,15 @@ fi
 DATA_DIRS="handoffs logs sessions feedback gaps metrics index"
 for d in $DATA_DIRS; do mkdir -p "/opt/faiyke/$d"; done
 [ -f /opt/faiyke/.env ] || { cp /opt/faiyke/.env.example /opt/faiyke/.env; echo ">> Edit /opt/faiyke/.env now (API key, ALLOWED_ORIGINS)"; }
+# Key for the keyed hashes in rag/pseudonym.py. Made here, as root, because the service cannot write to /opt/faiyke.
+# It stays outside the data folders on purpose: a copy of sessions/ or gaps/ alone must not be enough to read them.
+[ -s /opt/faiyke/.privacy_key ] || (umask 077; python3 -c "import secrets;print(secrets.token_hex(32))" > /opt/faiyke/.privacy_key)
 # The program (code, web files, knowledge base) belongs to root: if the chat service were ever broken into, it could
 # not rewrite its own code. The service user owns only the folders it has to write to, and reads .env through its group.
 chown -R root:faiyke /opt/faiyke
 chmod -R u=rwX,g=rX,o= /opt/faiyke
 for d in $DATA_DIRS; do chown -R faiyke:faiyke "/opt/faiyke/$d"; chmod -R u=rwX,go= "/opt/faiyke/$d"; done
-chmod 640 /opt/faiyke/.env
+chmod 640 /opt/faiyke/.env /opt/faiyke/.privacy_key
 (cd /opt/faiyke && sudo -u faiyke python3 -m rag.ingest)
 
 cp /opt/faiyke/deploy/faiyke-chat.service /etc/systemd/system/

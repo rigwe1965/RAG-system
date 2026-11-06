@@ -15,3 +15,4 @@ hub/
 *.db
 *.db-shm
 *.db-wal
+.privacy_key

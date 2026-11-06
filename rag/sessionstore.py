@@ -18,7 +18,6 @@ Privacy rules (each has a test):
 
 Switch off with PERSIST_SESSIONS=off. Change the folder with SESSIONS_DIR.
 """
-import hashlib
 import json
 import os
 import sqlite3
@@ -26,6 +25,8 @@ import sys
 import threading
 import time
 from pathlib import Path
+
+from . import pseudonym
 
 ROOT = Path(__file__).resolve().parent.parent
 MAX_ROWS = 2000            # stored chats
@@ -39,7 +40,12 @@ def enabled():
 
 
 def key_hash(key):
-    return hashlib.sha256(("session:" + key).encode("utf-8")).hexdigest()
+    """Keyed hash (rag/pseudonym.py): a copy of sessions.db does not reveal which WhatsApp number a chat belongs to."""
+    return pseudonym.keyed("session", key)
+
+
+def legacy_key_hash(key):
+    return pseudonym.legacy("session", key)
 
 
 def default_path():
@@ -129,7 +135,7 @@ class SessionStore:
         """Delete chats whose text contains any of `needles` (case-insensitive), and the WhatsApp chat of a number.
         Returns the number removed."""
         needles = [n.lower() for n in needles if n]
-        keys = {key_hash(f"wa:{whatsapp_digits}")} if whatsapp_digits else set()
+        keys = {key_hash(f"wa:{whatsapp_digits}"), legacy_key_hash(f"wa:{whatsapp_digits}")} if whatsapp_digits else set()
 
         def op(db):
             doomed = set(keys)

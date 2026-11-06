@@ -107,7 +107,10 @@ class Admin:
             return "ok", token
 
     def _hash(self, password):
-        return hashlib.scrypt(password.encode("utf-8"), salt=self._salt, n=2 ** 14, r=8, p=1, dklen=32)
+        # N=2^16 (64 MiB, about 0.15 s). Python refuses more than 32 MiB unless maxmem is raised. Not 2^17: every login
+        # attempt, also a failed one, costs this much memory, and a flood of attempts should not be able to exhaust it.
+        return hashlib.scrypt(password.encode("utf-8"), salt=self._salt, n=2 ** 16, r=8, p=1, dklen=32,
+                              maxmem=128 * 1024 * 1024)
 
     @staticmethod
     def _key(token):
