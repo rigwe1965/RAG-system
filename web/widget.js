@@ -82,7 +82,7 @@
   } catch (e) {}
 
   var css = [
-    ".fy-btn{position:fixed;right:20px;bottom:20px;width:58px;height:58px;border-radius:50%;border:0;background:#ff6b1a;color:#fff;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 4px rgba(27,22,36,.2),0 10px 30px rgba(27,22,36,.28);z-index:2147483000;transition:transform .15s}",
+    ".fy-btn{position:fixed;right:20px;bottom:20px;width:58px;height:58px;border-radius:50%;border:0;background:#1f8a4c;color:#fff;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 4px rgba(27,22,36,.2),0 10px 30px rgba(27,22,36,.28);z-index:2147483000;transition:transform .15s}",
     ".fy-btn:hover{transform:scale(1.05)}",
     ".fy-btn svg,.fy-mark svg,.fy-work svg{overflow:visible}",
     ".fy-btn:focus-visible,.fy-form button:focus-visible,.fy-bar button:focus-visible,.fy-speak:focus-visible,.fy-why button:focus-visible,.fy-unsure button:focus-visible,.fy-reasons button:focus-visible{outline:2px solid #5a3b96;outline-offset:2px}",
@@ -101,9 +101,9 @@
     ".fy-del.fy-sure{width:auto;padding:0 10px;font:inherit;font-size:12.5px;font-weight:600;color:#b3261e;border-color:#b3261e}",
     ".fy-consent{margin:0 12px 8px;padding:10px 12px;border:1px solid #dcd8d0;border-radius:14px;font-size:13px;line-height:1.45;color:#4d4559;background:#f1efea}",
     ".fy-consent p{margin:0 0 8px}",
-    ".fy-consent button{border:0;border-radius:10px;padding:6px 13px;margin-right:6px;font:inherit;font-weight:600;font-size:13px;background:#ff6b1a;color:#fff;cursor:pointer}",
+    ".fy-consent button{border:0;border-radius:10px;padding:6px 13px;margin-right:6px;font:inherit;font-weight:600;font-size:13px;background:#1f8a4c;color:#fff;cursor:pointer}",
     ".fy-consent button.fy-plain{background:none;color:#4d4559;border:1px solid #dcd8d0}",
-    ".fy-speak[aria-pressed=true]{background:#ff6b1a;border-color:#ff6b1a;color:#161513}",
+    ".fy-speak[aria-pressed=true]{background:#1f8a4c;border-color:#1f8a4c;color:#fff}",
     ".fy-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;background:#f1efea}",
     ".fy-msg{overflow-wrap:anywhere;white-space:pre-wrap}",
     ".fy-bot{align-self:flex-start;max-width:94%}",
@@ -113,13 +113,13 @@
     ".fy-work .fy-loader{flex:none;width:24px;height:24px}.fy-work .fy-loader svg{width:100%;height:100%}",
     ".fy-work .fy-st{animation:fy-sway 1.5s ease-in-out infinite}.fy-work .fy-st:nth-child(2){animation-delay:.12s}.fy-work .fy-st:nth-child(3){animation-delay:.24s}.fy-work .fy-st:nth-child(4){animation-delay:.36s}.fy-work .fy-st:nth-child(5){animation-delay:.48s}",
     "@keyframes fy-sway{0%,100%{transform:translateY(1.5px) scaleY(.88)}50%{transform:translateY(-1.5px) scaleY(1.06)}}",
-    ".fy-cta{display:inline-block;margin-top:8px;padding:8px 15px;border-radius:10px;background:#ff6b1a;color:#fff;font-weight:600;text-decoration:none;font-size:14px}",
+    ".fy-cta{display:inline-block;margin-top:8px;padding:8px 15px;border-radius:10px;background:#1f8a4c;color:#fff;font-weight:600;text-decoration:none;font-size:14px}",
     ".fy-cta:hover{filter:brightness(1.06)}",
     ".fy-tools{align-self:flex-start;max-width:94%;margin-top:-8px}",
     ".fy-src{display:flex;flex-wrap:wrap;align-items:center;gap:5px 6px;margin:0 0 4px;padding:0;list-style:none;font-size:12px;color:#6c6479}",
     ".fy-src li.fy-s{display:inline-flex;align-items:center;gap:6px;padding:2px 9px 2px 8px;border:1px solid #dcd8d0;border-radius:999px;background:#fbfaf8;color:#4d4559;line-height:1.4}",
     ".fy-src li.fy-s::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--fyc,#6c6479);flex:none}",
-    ".fy-unsure{margin:2px 0 6px;padding:2px 0 2px 11px;border-left:3px solid #ff6b1a;font-size:13.5px;color:#4d4559;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}",
+    ".fy-unsure{margin:2px 0 6px;padding:2px 0 2px 11px;border-left:3px solid #1f8a4c;font-size:13.5px;color:#4d4559;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}",
     ".fy-unsure p{margin:0;white-space:normal}",
     ".fy-unsure button{border:1px solid #dcd8d0;background:#fbfaf8;color:#161513;border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}",
     ".fy-unsure button:hover{border-color:#6c6479}",
@@ -136,14 +136,14 @@
     ".fy-why{display:flex;gap:6px}",
     ".fy-why input{flex:1;min-width:0;padding:7px 11px;border:1px solid #dcd8d0;border-radius:12px;font:inherit;font-size:13.5px;background:#fbfaf8;color:inherit}",
     ".fy-why input:focus{outline:0;border-color:#5a3b96}",
-    ".fy-why button{border:0;border-radius:12px;padding:0 13px;background:#ff6b1a;color:#fff;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer}",
+    ".fy-why button{border:0;border-radius:12px;padding:0 13px;background:#1f8a4c;color:#fff;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer}",
     ".fy-note{font-size:12px;color:#6c6479;line-height:1.45;padding:0 2px}",
     ".fy-note a{color:inherit}",
     ".fy-status{padding:0 18px 6px;font-size:12px;line-height:1.4;color:#6c6479}.fy-status:empty{display:none}.fy-status.fy-bad{color:#b3261e}",
     ".fy-form{display:flex;align-items:flex-end;gap:6px;margin:0 12px 12px;padding:6px 6px 6px 14px;border:1px solid #dcd8d0;border-radius:14px;background:#fbfaf8}",
     ".fy-form:focus-within{border-color:#5a3b96}",
     ".fy-form textarea{flex:1;min-width:0;border:0;outline:0;resize:none;max-height:120px;padding:7px 0;font:inherit;background:none;color:inherit}",
-    ".fy-form button{flex:none;width:36px;height:36px;border:0;border-radius:10px;background:#ff6b1a;color:#fff;cursor:pointer;display:grid;place-items:center;position:relative}",
+    ".fy-form button{flex:none;width:36px;height:36px;border:0;border-radius:10px;background:#1f8a4c;color:#fff;cursor:pointer;display:grid;place-items:center;position:relative}",
     ".fy-form button:disabled{background:#dcd8d0;color:#8a8196;cursor:default}",
     ".fy-form .fy-mic{background:none;color:#4d4559}.fy-form .fy-mic:hover{background:#e9e6e0}",
     ".fy-form .fy-mic[aria-pressed=true]{background:#b3261e;color:#fff}",
@@ -151,7 +151,7 @@
     "@keyframes fy-ring{from{opacity:.7;transform:scale(.9)}to{opacity:0;transform:scale(1.3)}}",
     "@media (max-width:520px){.fy-panel{right:0;bottom:0;width:100vw;max-width:none;height:100dvh;max-height:none;border-radius:0}.fy-btn{right:16px;bottom:16px}}",
     "@media (prefers-reduced-motion:reduce){.fy-panel.fy-open,.fy-work .fy-st,.fy-form .fy-mic[aria-pressed=true]::after{animation:none}.fy-btn{transition:none}}",
-    "@media (prefers-color-scheme:dark){.fy-panel{background:#17131f;color:#efeaf6}.fy-head{border-color:#2b2537}.fy-head small,.fy-note,.fy-status,.fy-thanks,.fy-src{color:#978fa6}.fy-log{background:#17131f}.fy-me{background:#3a2f52;color:#f6f2fb}.fy-work,.fy-unsure{color:#bdb5ca}.fy-form{background:#1d1827;border-color:#2b2537}.fy-form:focus-within{border-color:#b9a0f2}.fy-form button{background:#ff7a2e;color:#1b1624}.fy-form button:disabled{background:#2b2537;color:#978fa6}.fy-form .fy-mic{background:none;color:#bdb5ca}.fy-form .fy-mic:hover{background:#2b2537}.fy-form .fy-mic[aria-pressed=true]{background:#f2877f;color:#17131f}.fy-err,.fy-status.fy-bad{color:#f2877f}.fy-speak,.fy-del{background:#1d1827;border-color:#2b2537;color:#978fa6}.fy-speak:hover:not(:disabled),.fy-del:hover{color:#efeaf6}.fy-del.fy-sure{color:#f2877f;border-color:#f2877f}.fy-consent{background:#1d1827;border-color:#2b2537;color:#bdb5ca}.fy-consent button{background:#ff7a2e}.fy-consent button.fy-plain{background:none;color:#bdb5ca;border-color:#2b2537}.fy-speak[aria-pressed=true]{background:#ff7a2e;border-color:#ff7a2e;color:#1b1624}.fy-bar button{color:#978fa6}.fy-bar button:hover,.fy-bar button[aria-pressed=true]{background:#2b2537;color:#efeaf6}.fy-chips button,.fy-reasons button{background:#1d1827;border-color:#2b2537}.fy-chips button:hover,.fy-reasons button:hover{border-color:#b9a0f2;color:#b9a0f2}.fy-why input{background:#1d1827;border-color:#2b2537}.fy-why input:focus{border-color:#b9a0f2}.fy-why button,.fy-cta{background:#ff7a2e;color:#1b1624}.fy-src li.fy-s{background:#1d1827;border-color:#2b2537;color:#bdb5ca}.fy-unsure button{background:#1d1827;border-color:#2b2537;color:#efeaf6}.fy-btn:focus-visible,.fy-form button:focus-visible,.fy-bar button:focus-visible,.fy-speak:focus-visible,.fy-why button:focus-visible,.fy-unsure button:focus-visible,.fy-reasons button:focus-visible{outline-color:#b9a0f2}}"
+    "@media (prefers-color-scheme:dark){.fy-panel{background:#17131f;color:#efeaf6}.fy-head{border-color:#2b2537}.fy-head small,.fy-note,.fy-status,.fy-thanks,.fy-src{color:#978fa6}.fy-log{background:#17131f}.fy-me{background:#3a2f52;color:#f6f2fb}.fy-work,.fy-unsure{color:#bdb5ca}.fy-form{background:#1d1827;border-color:#2b2537}.fy-form:focus-within{border-color:#b9a0f2}.fy-form button{background:#4cc47a;color:#1b1624}.fy-form button:disabled{background:#2b2537;color:#978fa6}.fy-form .fy-mic{background:none;color:#bdb5ca}.fy-form .fy-mic:hover{background:#2b2537}.fy-form .fy-mic[aria-pressed=true]{background:#f2877f;color:#17131f}.fy-err,.fy-status.fy-bad{color:#f2877f}.fy-speak,.fy-del{background:#1d1827;border-color:#2b2537;color:#978fa6}.fy-speak:hover:not(:disabled),.fy-del:hover{color:#efeaf6}.fy-del.fy-sure{color:#f2877f;border-color:#f2877f}.fy-consent{background:#1d1827;border-color:#2b2537;color:#bdb5ca}.fy-consent button{background:#4cc47a}.fy-consent button.fy-plain{background:none;color:#bdb5ca;border-color:#2b2537}.fy-speak[aria-pressed=true]{background:#4cc47a;border-color:#4cc47a;color:#1b1624}.fy-bar button{color:#978fa6}.fy-bar button:hover,.fy-bar button[aria-pressed=true]{background:#2b2537;color:#efeaf6}.fy-chips button,.fy-reasons button{background:#1d1827;border-color:#2b2537}.fy-chips button:hover,.fy-reasons button:hover{border-color:#b9a0f2;color:#b9a0f2}.fy-why input{background:#1d1827;border-color:#2b2537}.fy-why input:focus{border-color:#b9a0f2}.fy-why button,.fy-cta{background:#4cc47a;color:#1b1624}.fy-src li.fy-s{background:#1d1827;border-color:#2b2537;color:#bdb5ca}.fy-unsure button{background:#1d1827;border-color:#2b2537;color:#efeaf6}.fy-btn:focus-visible,.fy-form button:focus-visible,.fy-bar button:focus-visible,.fy-speak:focus-visible,.fy-why button:focus-visible,.fy-unsure button:focus-visible,.fy-reasons button:focus-visible{outline-color:#b9a0f2}}"
   ].join("");
   var style = document.createElement("style");
   style.textContent = css;

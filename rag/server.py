@@ -507,6 +507,10 @@ def make_handler(app):
 
         def admin_same_site(self):
             origin = self.headers.get("Origin", "")
+            # Browsers send Sec-Fetch-Site and cannot forge it. It stays reliable when Referrer-Policy: no-referrer
+            # makes some Chrome versions send "Origin: null" on a same-site form post.
+            if self.headers.get("Sec-Fetch-Site"):
+                return self.headers["Sec-Fetch-Site"] in ("same-origin", "none")
             host = self.headers.get("Host", "")
             return not origin or origin in (f"http://{host}", f"https://{host}")
 
