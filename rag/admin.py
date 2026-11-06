@@ -309,7 +309,7 @@ def esc(value):
 
 
 STYLE = """
-:root{--ink:#161513;--mute:#6a665f;--bg:#f1efea;--card:#fbfaf8;--line:#dcd8d0;--brand:#5a3b96;--accent:#1f8a4c;--good:#2e7d32;--bad:#b3261e}
+:root{--ink:#161513;--mute:#6a665f;--bg:#f1efea;--card:#fbfaf8;--line:#dcd8d0;--brand:#5a3b96;--accent:#0a7d3b;--good:#2e7d32;--bad:#b3261e}
 @media (prefers-color-scheme:dark){:root{--ink:#efece6;--mute:#a09b92;--bg:#141311;--card:#1c1b18;--line:#2e2c28;--brand:#b9a0f2;--accent:#2a9a5c;--good:#6fcf7a;--bad:#f2877f}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
 main{max-width:1000px;margin:0 auto;padding:20px 16px 60px}
